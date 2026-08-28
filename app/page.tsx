@@ -7,8 +7,8 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   // Supabase Credentials
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  const supabaseUrl = 'https://wfrznynmacfgxknzhezw.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmcnpueW5tYWNmZ3hrbnpoZXp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAxNTk4MjIsImV4cCI6MjA1NTczNTgyMn0';
 
   useEffect(() => {
     async function fetchMembersData() {
