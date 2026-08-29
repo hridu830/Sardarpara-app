@@ -1,0 +1,131 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@font-face {
+  font-family: "Hind Siliguri";
+  src: local("Hind Siliguri");
+}
+
+:root {
+  --radius: 0.85rem;
+
+  /* Brand: dark green + gold, warm cream paper background */
+  --background: #FBF7EC;
+  --foreground: #2B2620;
+
+  --card: #FFFFFF;
+  --card-foreground: #2B2620;
+
+  --popover: #FFFFFF;
+  --popover-foreground: #2B2620;
+
+  --primary: #1B4332;
+  --primary-foreground: #F3ECDA;
+
+  --secondary: #E6F0EA;
+  --secondary-foreground: #1B4332;
+
+  --muted: #EDE4CC;
+  --muted-foreground: #6b5f4a;
+
+  --accent: #C9A227;
+  --accent-foreground: #2B2620;
+
+  --destructive: #A63D40;
+  --destructive-foreground: #FFFFFF;
+
+  --border: #E4D9B8;
+  --input: #E4D9B8;
+  --ring: #C9A227;
+
+  --chart-1: #1B4332;
+  --chart-2: #C9A227;
+  --chart-3: #6b5f4a;
+  --chart-4: #A63D40;
+  --chart-5: #2D6A4F;
+}
+
+.dark {
+  --background: #16211c;
+  --foreground: #F3ECDA;
+
+  --card: #1c2b23;
+  --card-foreground: #F3ECDA;
+
+  --popover: #1c2b23;
+  --popover-foreground: #F3ECDA;
+
+  --primary: #2D6A4F;
+  --primary-foreground: #F3ECDA;
+
+  --secondary: #223b30;
+  --secondary-foreground: #F3ECDA;
+
+  --muted: #223b30;
+  --muted-foreground: #b7ab8c;
+
+  --accent: #C9A227;
+  --accent-foreground: #16211c;
+
+  --destructive: #A63D40;
+  --destructive-foreground: #FFFFFF;
+
+  --border: #2c4438;
+  --input: #2c4438;
+  --ring: #C9A227;
+
+  --chart-1: #2D6A4F;
+  --chart-2: #C9A227;
+  --chart-3: #b7ab8c;
+  --chart-4: #A63D40;
+  --chart-5: #1B4332;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Tiro Bangla", ui-serif, Georgia, serif;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    font-family: "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
