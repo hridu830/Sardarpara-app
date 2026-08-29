@@ -1,8 +1,10 @@
-import './globals.css';
+import type { Metadata } from "next";
+import "./globals.css";
+import Navbar from "@/components/Navbar";
 
-export const metadata = {
-  title: 'সর্দারপাড়া আমলে সালেহ্ যুব সংঘ',
-  description: 'সর্দারপাড়া আমলে সালেহ্ যুব সংঘের তহবিল ও সদস্য ব্যবস্থাপনা',
+export const metadata: Metadata = {
+  title: "সর্দারপাড়া আমলে সালেহ যুব সংঘ",
+  description: "চাঁদা, ব্যয় ও কল্যাণমূলক কাজের স্বচ্ছ হিসাব",
 };
 
 export default function RootLayout({
@@ -12,24 +14,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="bn">
-      <body className="font-sans antialiased bg-background">
-        <header className="bg-[#006a4e] text-white p-4 shadow-md flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#006a4e] font-bold text-xl">
-              S
-            </div>
-            <div>
-              <h1 className="text-lg font-bold leading-tight">সর্দারপাড়া আমলে সালেহ্ যুব সংঘ</h1>
-              <p className="text-xs text-emerald-100">"একতার আলো জ্বলুক সর্বদা"</p>
-            </div>
-          </div>
-          <nav className="flex gap-4 text-sm font-medium">
-            <a href="#" className="hover:underline">হোম</a>
-            <a href="#" className="hover:underline">সদস্য</a>
-            <a href="#" className="hover:underline">হিসাব</a>
-          </nav>
-        </header>
-        <main>{children}</main>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Tiro+Bangla:ital@0;1&family=Hind+Siliguri:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body>
+        <Navbar />
+        <main className="app">{children}</main>
       </body>
     </html>
   );
