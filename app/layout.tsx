@@ -1,25 +1,28 @@
-import './globals.css';
+import type { Metadata } from 'next'
+import { Hind_Siliguri } from 'next/font/google'
+import './globals.css'
 
-export const metadata = {
+const hindSiliguri = Hind_Siliguri({
+  subsets: ['bengali'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-bengali',
+})
+
+export const metadata: Metadata = {
   title: 'সর্দারপাড়া আমলে সালেহ্ যুব সংঘ',
   description: 'সর্দারপাড়া আমলে সালেহ্ যুব সংঘের তহবিল ও সদস্য ব্যবস্থাপনা',
-};
+}
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode;
-}) {
+}: Readonly<{
+  children: React.ReactNode
+}>) {
   return (
     <html lang="bn">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-      </head>
-      <body className="font-sans antialiased bg-background">
+      <body className={`${hindSiliguri.variable} font-sans antialiased bg-background`}>
         {children}
       </body>
     </html>
-  );
+  )
 }
