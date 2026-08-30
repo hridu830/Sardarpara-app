@@ -12,9 +12,9 @@ export function MobileShell() {
   const [screen, setScreen] = useState<Screen>('home')
 
   return (
-    <div className="flex min-h-dvh justify-center bg-muted/40">
+    <div className="flex h-dvh justify-center bg-muted/40">
       {/* Phone frame */}
-      <div className="relative flex min-h-dvh w-full max-w-md flex-col bg-background shadow-xl sm:my-4 sm:min-h-0 sm:h-[calc(100dvh-2rem)] sm:rounded-[2.5rem] sm:border sm:border-border">
+      <div className="relative flex h-dvh w-full max-w-md flex-col bg-background shadow-xl sm:my-4 sm:h-[calc(100dvh-2rem)] sm:rounded-[2.5rem] sm:border sm:border-border">
         {/* Scrollable screen area */}
         <main className="flex-1 overflow-y-auto pb-6 sm:rounded-t-[2.5rem]">
           {screen === 'home' && <DashboardScreen onNavigate={setScreen} />}
@@ -27,7 +27,7 @@ export function MobileShell() {
         </main>
 
         {/* Bottom navigation */}
-        <div className="sm:overflow-hidden sm:rounded-b-[2.5rem]">
+        <div className="shrink-0 sm:overflow-hidden sm:rounded-b-[2.5rem]">
           <BottomNav active={screen} onNavigate={setScreen} />
         </div>
       </div>
