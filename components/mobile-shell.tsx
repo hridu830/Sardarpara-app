@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BottomNav, type Screen } from '@/components/bottom-nav'
 import { DashboardScreen } from '@/components/screens/dashboard-screen'
 import { MembersScreen } from '@/components/screens/members-screen'
@@ -10,8 +10,13 @@ import { ReportScreen } from '@/components/screens/report-screen'
 import {
   LEDGER_KEY,
   MEMBERS_KEY,
+  PRAYER_TIMES_KEY,
+  NOTIF_ENABLED_KEY,
+  defaultPrayerTimes,
+  prayerLabels,
   type Transaction,
   type Member,
+  type PrayerSchedule,
 } from '@/lib/data'
 
 function uid() {
@@ -22,7 +27,10 @@ export function MobileShell() {
   const [screen, setScreen] = useState<Screen>('home')
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [members, setMembers] = useState<Member[]>([])
+  const [prayerTimes, setPrayerTimes] = useState<PrayerSchedule>(defaultPrayerTimes)
+  const [notifEnabled, setNotifEnabled] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const firedRef = useRef<Set<string>>(new Set())
 
   // Load real saved data once, on the client only.
   useEffect(() => {
@@ -31,6 +39,10 @@ export function MobileShell() {
       setTransactions(t ? JSON.parse(t) : [])
       const m = window.localStorage.getItem(MEMBERS_KEY)
       setMembers(m ? JSON.parse(m) : [])
+      const p = window.localStorage.getItem(PRAYER_TIMES_KEY)
+      setPrayerTimes(p ? JSON.parse(p) : defaultPrayerTimes)
+      const n = window.localStorage.getItem(NOTIF_ENABLED_KEY)
+      setNotifEnabled(n === 'true')
     } catch (e) {
       console.error(e)
     }
@@ -46,6 +58,48 @@ export function MobileShell() {
     if (!loaded) return
     window.localStorage.setItem(MEMBERS_KEY, JSON.stringify(members))
   }, [members, loaded])
+
+  useEffect(() => {
+    if (!loaded) return
+    window.localStorage.setItem(PRAYER_TIMES_KEY, JSON.stringify(prayerTimes))
+  }, [prayerTimes, loaded])
+
+  useEffect(() => {
+    if (!loaded) return
+    window.localStorage.setItem(NOTIF_ENABLED_KEY, String(notifEnabled))
+  }, [notifEnabled, loaded])
+
+  // Prayer-time reminder — only fires while this browser tab is open.
+  // Real background push (works even with the app/browser closed) needs a
+  // server + service worker, which isn't set up here.
+  useEffect(() => {
+    if (!loaded || !notifEnabled) return
+    if (typeof window === 'undefined' || !('Notification' in window)) return
+
+    const interval = setInterval(() => {
+      if (Notification.permission !== 'granted') return
+      const now = new Date()
+      const hhmm = `${String(now.getHours()).padStart(2, '0')}:${String(
+        now.getMinutes(),
+      ).padStart(2, '0')}`
+      const todayKey = now.toISOString().slice(0, 10)
+
+      ;(Object.keys(prayerTimes) as (keyof PrayerSchedule)[]).forEach((key) => {
+        if (prayerTimes[key] === hhmm) {
+          const fireKey = `${todayKey}-${key}`
+          if (!firedRef.current.has(fireKey)) {
+            firedRef.current.add(fireKey)
+            new Notification('নামাজের সময় হয়েছে', {
+              body: `${prayerLabels[key]}-এর সময় হয়েছে।`,
+              icon: '/logo.png',
+            })
+          }
+        }
+      })
+    }, 20_000)
+
+    return () => clearInterval(interval)
+  }, [loaded, notifEnabled, prayerTimes])
 
   function addTransaction(tx: Omit<Transaction, 'id'>) {
     setTransactions((prev) => [{ ...tx, id: uid() }, ...prev])
@@ -89,7 +143,15 @@ export function MobileShell() {
           {screen === 'transaction' && (
             <TransactionScreen onNavigate={setScreen} onSave={addTransaction} />
           )}
-          {screen === 'namaz' && <NamazScreen members={members} />}
+          {screen === 'namaz' && (
+            <NamazScreen
+              members={members}
+              prayerTimes={prayerTimes}
+              onUpdatePrayerTimes={setPrayerTimes}
+              notifEnabled={notifEnabled}
+              onToggleNotif={setNotifEnabled}
+            />
+          )}
           {screen === 'report' && <ReportScreen transactions={transactions} />}
         </main>
 
