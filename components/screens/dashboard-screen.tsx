@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -16,22 +16,35 @@ import {
   formatTaka,
   getRandomHadith,
   hadiths,
-  recentTransactions,
-  summary,
   type Hadith,
+  type Transaction,
 } from '@/lib/data'
 import { cn } from '@/lib/utils'
 
 export function DashboardScreen({
   onNavigate,
+  transactions,
 }: {
   onNavigate: (screen: Screen) => void
+  transactions: Transaction[]
 }) {
   const [hadith, setHadith] = useState<Hadith>(hadiths[0])
 
   useEffect(() => {
     setHadith(getRandomHadith())
   }, [])
+
+  const { totalFund, totalExpense, balance } = useMemo(() => {
+    let fund = 0
+    let expense = 0
+    transactions.forEach((t) => {
+      if (t.type === 'income') fund += t.amount
+      else expense += Math.abs(t.amount)
+    })
+    return { totalFund: fund, totalExpense: expense, balance: fund - expense }
+  }, [transactions])
+
+  const recent = transactions.slice(0, 6)
 
   return (
     <div className="flex flex-col">
@@ -43,14 +56,12 @@ export function DashboardScreen({
         />
 
         <div className="relative flex justify-end">
-          <button
-            type="button"
-            aria-label="বিজ্ঞপ্তি"
+          <span
+            title="বিজ্ঞপ্তি সেটিংস নামাজ ট্যাবে পাওয়া যাবে"
             className="relative flex size-9 shrink-0 items-center justify-center rounded-full border border-primary-foreground/15 bg-primary-foreground/10 backdrop-blur-sm"
           >
             <Bell className="size-4.5" />
-            <span className="absolute right-2 top-2 size-2 rounded-full bg-accent" />
-          </button>
+          </span>
         </div>
 
         {/* Prominent glassmorphic logo */}
@@ -111,20 +122,12 @@ export function DashboardScreen({
             <span className="text-[13px] font-medium">বর্তমান ব্যালেন্স</span>
           </div>
           <p className="mt-1.5 text-4xl font-bold tracking-tight text-primary">
-            {formatTaka(summary.balance)}
+            {formatTaka(balance)}
           </p>
 
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <SummaryTile
-              label="মোট ফান্ড"
-              value={formatTaka(summary.totalFund)}
-              tone="income"
-            />
-            <SummaryTile
-              label="মোট খরচ"
-              value={formatTaka(summary.totalExpense)}
-              tone="expense"
-            />
+            <SummaryTile label="মোট আয়" value={formatTaka(totalFund)} tone="income" />
+            <SummaryTile label="মোট খরচ" value={formatTaka(totalExpense)} tone="expense" />
           </div>
         </div>
       </div>
@@ -156,10 +159,8 @@ export function DashboardScreen({
       {/* Recent transactions */}
       <section className="mt-6 px-5">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-bold text-foreground">
-            সাম্প্রতিক লেনদেন
-          </h2>
-          {recentTransactions.length > 0 && (
+          <h2 className="text-base font-bold text-foreground">সাম্প্রতিক লেনদেন</h2>
+          {transactions.length > 0 && (
             <button
               type="button"
               onClick={() => onNavigate('report')}
@@ -170,13 +171,13 @@ export function DashboardScreen({
           )}
         </div>
 
-        {recentTransactions.length === 0 ? (
+        {recent.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">
             এখনো কোনো লেনদেন যোগ করা হয়নি। উপরের বাটন থেকে প্রথম লেনদেন যোগ করুন।
           </p>
         ) : (
           <ul className="flex flex-col gap-2.5">
-            {recentTransactions.map((tx) => {
+            {recent.map((tx) => {
               const isIncome = tx.type === 'income'
               return (
                 <li
@@ -186,9 +187,7 @@ export function DashboardScreen({
                   <span
                     className={cn(
                       'flex size-10 shrink-0 items-center justify-center rounded-full',
-                      isIncome
-                        ? 'bg-secondary text-primary'
-                        : 'bg-accent/15 text-accent',
+                      isIncome ? 'bg-secondary text-primary' : 'bg-accent/15 text-accent',
                     )}
                   >
                     {isIncome ? (
@@ -198,10 +197,8 @@ export function DashboardScreen({
                     )}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-foreground">
-                      {tx.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{tx.date}</p>
+                    <p className="truncate text-sm font-semibold text-foreground">{tx.title}</p>
+                    <p className="text-xs text-muted-foreground">{tx.dateLabel}</p>
                   </div>
                   <span
                     className={cn(
@@ -236,9 +233,7 @@ function SummaryTile({
         <span
           className={cn(
             'flex size-6 items-center justify-center rounded-full',
-            tone === 'income'
-              ? 'bg-secondary text-primary'
-              : 'bg-accent/15 text-accent',
+            tone === 'income' ? 'bg-secondary text-primary' : 'bg-accent/15 text-accent',
           )}
         >
           {tone === 'income' ? (
@@ -247,9 +242,7 @@ function SummaryTile({
             <ArrowUpRight className="size-3.5" />
           )}
         </span>
-        <span className="text-[12px] font-medium text-muted-foreground">
-          {label}
-        </span>
+        <span className="text-[12px] font-medium text-muted-foreground">{label}</span>
       </div>
       <p className="mt-1.5 text-lg font-bold text-foreground">{value}</p>
     </div>
