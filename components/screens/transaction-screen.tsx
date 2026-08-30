@@ -1,31 +1,62 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowDownCircle, ArrowUpCircle, Upload, Check } from 'lucide-react'
+import { ArrowDownCircle, ArrowUpCircle, Check } from 'lucide-react'
 import type { Screen } from '@/components/bottom-nav'
 import { ScreenHeader } from '@/components/screen-header'
-import { categories, toBengaliDigits } from '@/lib/data'
+import { categories, toBengaliDigits, type Transaction } from '@/lib/data'
 import { cn } from '@/lib/utils'
+
+const MONTHS = [
+  'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
+  'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর',
+]
+
+function todayISOAndLabel() {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const iso = `${y}-${m}-${day}`
+  const label = `${toBengaliDigits(d.getDate())} ${MONTHS[d.getMonth()]}, ${toBengaliDigits(y)}`
+  return { iso, label }
+}
 
 export function TransactionScreen({
   onNavigate,
+  onSave,
 }: {
   onNavigate: (screen: Screen) => void
+  onSave: (tx: Omit<Transaction, 'id'>) => void
 }) {
   const [type, setType] = useState<'income' | 'expense'>('income')
   const [amount, setAmount] = useState('')
-  const [category, setCategory] = useState<string>('মসজিদ')
+  const [category, setCategory] = useState<string>(categories[0])
   const [description, setDescription] = useState('')
-  const [receiptName, setReceiptName] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    const amt = Number(amount)
+    if (!amt || amt <= 0) return
+
+    const { iso, label } = todayISOAndLabel()
+    onSave({
+      title: description.trim() || category,
+      category,
+      amount: type === 'income' ? amt : -amt,
+      type,
+      date: iso,
+      dateLabel: label,
+    })
+
     setSaved(true)
     setTimeout(() => {
       setSaved(false)
+      setAmount('')
+      setDescription('')
       onNavigate('home')
-    }, 900)
+    }, 700)
   }
 
   return (
@@ -72,21 +103,17 @@ export function TransactionScreen({
 
         {/* Amount */}
         <div>
-          <label
-            htmlFor="amount"
-            className="mb-2 block text-sm font-semibold text-foreground"
-          >
-            পরিমাণ
+          <label htmlFor="amount" className="mb-2 block text-sm font-semibold text-foreground">
+            পরিমাণ *
           </label>
           <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3.5">
             <span className="text-xl font-bold text-primary">৳</span>
             <input
               id="amount"
               inputMode="numeric"
+              required
               value={amount}
-              onChange={(e) =>
-                setAmount(e.target.value.replace(/[^0-9]/g, ''))
-              }
+              onChange={(e) => setAmount(e.target.value.replace(/[^0-9]/g, ''))}
               placeholder="০"
               className="w-full bg-transparent text-xl font-bold text-foreground outline-none placeholder:text-muted-foreground/50"
             />
@@ -100,9 +127,7 @@ export function TransactionScreen({
 
         {/* Category */}
         <div>
-          <span className="mb-2 block text-sm font-semibold text-foreground">
-            খাত
-          </span>
+          <span className="mb-2 block text-sm font-semibold text-foreground">খাত</span>
           <div className="flex flex-wrap gap-2">
             {categories.map((cat) => (
               <button
@@ -125,10 +150,7 @@ export function TransactionScreen({
 
         {/* Description */}
         <div>
-          <label
-            htmlFor="description"
-            className="mb-2 block text-sm font-semibold text-foreground"
-          >
+          <label htmlFor="description" className="mb-2 block text-sm font-semibold text-foreground">
             বিবরণ
           </label>
           <textarea
@@ -136,53 +158,9 @@ export function TransactionScreen({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
-            placeholder="লেনদেনের বিস্তারিত লিখুন (যেমন: দাতার নাম, উদ্দেশ্য)"
+            placeholder="যেমন: দাতার নাম, উদ্দেশ্য (খালি রাখলে খাতের নামই দেখাবে)"
             className="w-full resize-none rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
           />
-        </div>
-
-        {/* Receipt upload */}
-        <div>
-          <span className="mb-2 block text-sm font-semibold text-foreground">
-            রসিদ / ভাউচার
-          </span>
-          <label
-            className={cn(
-              'flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-6 text-center transition-colors',
-              receiptName
-                ? 'border-primary bg-secondary'
-                : 'border-border bg-card',
-            )}
-          >
-            <input
-              type="file"
-              accept="image/*"
-              className="sr-only"
-              onChange={(e) =>
-                setReceiptName(e.target.files?.[0]?.name ?? null)
-              }
-            />
-            <span
-              className={cn(
-                'flex size-11 items-center justify-center rounded-full',
-                receiptName
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-primary',
-              )}
-            >
-              {receiptName ? (
-                <Check className="size-5" />
-              ) : (
-                <Upload className="size-5" />
-              )}
-            </span>
-            <span className="text-sm font-semibold text-foreground">
-              রসিদ আপলোড করুন
-            </span>
-            <span className="max-w-full truncate text-xs text-muted-foreground">
-              {receiptName ?? 'ছবি নির্বাচন করতে ট্যাপ করুন'}
-            </span>
-          </label>
         </div>
 
         {/* Submit */}
@@ -190,7 +168,7 @@ export function TransactionScreen({
           type="submit"
           className={cn(
             'mt-1 flex items-center justify-center gap-2 rounded-2xl py-4 text-base font-bold text-primary-foreground shadow-sm transition-transform active:scale-[0.98]',
-            saved ? 'bg-primary' : type === 'income' ? 'bg-primary' : 'bg-accent',
+            type === 'income' ? 'bg-primary' : 'bg-accent',
           )}
         >
           {saved ? (
