@@ -157,6 +157,8 @@ export const defaultIbadahTasks: IbadahTask[] = [
 
 export type SubmissionStatus = 'pending' | 'approved' | 'rejected'
 
+export type PrayerAttendance = 'jamaat' | 'alone' | 'missed'
+
 export type IbadahSubmission = {
   id: string
   taskId: string
@@ -164,6 +166,7 @@ export type IbadahSubmission = {
   date: string
   status: SubmissionStatus
   points: number
+  attendance?: PrayerAttendance
 }
 
 /** Default daily prayer time schedule — admin can edit these in নামাজ tab. */
