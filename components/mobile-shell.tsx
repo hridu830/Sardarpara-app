@@ -89,7 +89,7 @@ export function MobileShell() {
           {screen === 'transaction' && (
             <TransactionScreen onNavigate={setScreen} onSave={addTransaction} />
           )}
-          {screen === 'namaz' && <NamazScreen />}
+          {screen === 'namaz' && <NamazScreen members={members} />}
           {screen === 'report' && <ReportScreen transactions={transactions} />}
         </main>
 
