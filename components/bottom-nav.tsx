@@ -51,15 +51,17 @@ export function BottomNav({
                 >
                   <span
                     className={cn(
-                      'flex size-12 items-center justify-center rounded-full text-accent-foreground shadow-md shadow-accent/30 transition-transform active:scale-95',
-                      isActive ? 'bg-primary' : 'bg-accent',
+                      'flex size-12 items-center justify-center rounded-full text-accent-foreground shadow-md shadow-accent/30 ring-4 transition-all active:scale-95',
+                      isActive
+                        ? 'bg-primary ring-primary/20'
+                        : 'bg-accent ring-accent/15',
                     )}
                   >
                     <Icon className="size-6" strokeWidth={2.5} />
                   </span>
                   <span
                     className={cn(
-                      'text-[11px] font-medium',
+                      'text-[11px] font-semibold',
                       isActive ? 'text-primary' : 'text-muted-foreground',
                     )}
                   >
@@ -76,13 +78,36 @@ export function BottomNav({
                 type="button"
                 onClick={() => onNavigate(item.key)}
                 aria-current={isActive ? 'page' : undefined}
-                className={cn(
-                  'flex w-full flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors',
-                  isActive ? 'text-primary' : 'text-muted-foreground',
-                )}
+                className="flex w-full flex-col items-center gap-1 py-2.5"
               >
-                <Icon className="size-6" strokeWidth={isActive ? 2.4 : 2} />
-                {item.label}
+                <span
+                  className={cn(
+                    'flex items-center justify-center rounded-full px-4 py-1 transition-colors',
+                    isActive && 'bg-secondary',
+                  )}
+                >
+                  <Icon
+                    className={cn(
+                      'size-6',
+                      isActive ? 'text-primary' : 'text-muted-foreground',
+                    )}
+                    strokeWidth={isActive ? 2.6 : 2}
+                  />
+                </span>
+                <span
+                  className={cn(
+                    'text-[11px] font-medium transition-colors',
+                    isActive ? 'font-bold text-primary' : 'text-muted-foreground',
+                  )}
+                >
+                  {item.label}
+                </span>
+                <span
+                  className={cn(
+                    'h-1 w-1 rounded-full transition-opacity',
+                    isActive ? 'bg-accent opacity-100' : 'opacity-0',
+                  )}
+                />
               </button>
             </li>
           )
