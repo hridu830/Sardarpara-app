@@ -159,55 +159,63 @@ export function DashboardScreen({
           <h2 className="text-base font-bold text-foreground">
             সাম্প্রতিক লেনদেন
           </h2>
-          <button
-            type="button"
-            onClick={() => onNavigate('report')}
-            className="text-[13px] font-medium text-accent"
-          >
-            সব দেখুন
-          </button>
+          {recentTransactions.length > 0 && (
+            <button
+              type="button"
+              onClick={() => onNavigate('report')}
+              className="text-[13px] font-medium text-accent"
+            >
+              সব দেখুন
+            </button>
+          )}
         </div>
 
-        <ul className="flex flex-col gap-2.5">
-          {recentTransactions.map((tx) => {
-            const isIncome = tx.type === 'income'
-            return (
-              <li
-                key={tx.id}
-                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3.5"
-              >
-                <span
-                  className={cn(
-                    'flex size-10 shrink-0 items-center justify-center rounded-full',
-                    isIncome
-                      ? 'bg-secondary text-primary'
-                      : 'bg-accent/15 text-accent',
-                  )}
+        {recentTransactions.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">
+            এখনো কোনো লেনদেন যোগ করা হয়নি। উপরের বাটন থেকে প্রথম লেনদেন যোগ করুন।
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-2.5">
+            {recentTransactions.map((tx) => {
+              const isIncome = tx.type === 'income'
+              return (
+                <li
+                  key={tx.id}
+                  className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3.5"
                 >
-                  {isIncome ? (
-                    <ArrowDownRight className="size-5" />
-                  ) : (
-                    <ArrowUpRight className="size-5" />
-                  )}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-foreground">
-                    {tx.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{tx.date}</p>
-                </div>
-                <span
-                  className={cn(
-                    'shrink-0 text-sm font-bold',
-                    isIncome ? 'text-primary' : 'text-accent',
-                  )}
-                >
-                  {formatSignedTaka(tx.amount)}
-                </span>
-              </li>
-            )
-          })}
-        </ul>
+                  <span
+                    className={cn(
+                      'flex size-10 shrink-0 items-center justify-center rounded-full',
+                      isIncome
+                        ? 'bg-secondary text-primary'
+                        : 'bg-accent/15 text-accent',
+                    )}
+                  >
+                    {isIncome ? (
+                      <ArrowDownRight className="size-5" />
+                    ) : (
+                      <ArrowUpRight className="size-5" />
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      {tx.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{tx.date}</p>
+                  </div>
+                  <span
+                    className={cn(
+                      'shrink-0 text-sm font-bold',
+                      isIncome ? 'text-primary' : 'text-accent',
+                    )}
+                  >
+                    {formatSignedTaka(tx.amount)}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        )}
       </section>
     </div>
   )
