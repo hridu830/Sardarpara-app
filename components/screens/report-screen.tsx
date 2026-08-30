@@ -1,7 +1,8 @@
 'use client'
 
+import { useMemo } from 'react'
 import { TrendingUp, TrendingDown, Wallet } from 'lucide-react'
-import { Cell, Label, Pie, PieChart } from 'recharts'
+import { Cell, Pie, PieChart } from 'recharts'
 import { ScreenHeader } from '@/components/screen-header'
 import {
   ChartContainer,
@@ -9,21 +10,62 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart'
-import { expenseByCategory, formatTaka, summary, toBengaliDigits } from '@/lib/data'
+import { formatTaka, toBengaliDigits, type Transaction } from '@/lib/data'
 import { cn } from '@/lib/utils'
 
-const chartConfig = {
-  mosque: { label: 'মসজিদ', color: 'var(--chart-1)' },
-  road: { label: 'রাস্তা', color: 'var(--chart-2)' },
-  help: { label: 'সাহায্য', color: 'var(--chart-3)' },
-  other: { label: 'অন্যান্য', color: 'var(--chart-4)' },
-} satisfies ChartConfig
+const palette = [
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
+]
 
-// Map slice labels to config keys for coloring.
-const sliceKey = ['mosque', 'road', 'help', 'other']
+export function ReportScreen({ transactions }: { transactions: Transaction[] }) {
+  const { totalIncome, totalExpense, balance, categoryBreakdown } = useMemo(() => {
+    let income = 0
+    let expense = 0
+    const byCategory: Record<string, number> = {}
 
-export function ReportScreen() {
-  const totalExpense = expenseByCategory.reduce((s, c) => s + c.value, 0)
+    transactions.forEach((t) => {
+      if (t.type === 'income') {
+        income += t.amount
+      } else {
+        const amt = Math.abs(t.amount)
+        expense += amt
+        byCategory[t.category] = (byCategory[t.category] || 0) + amt
+      }
+    })
+
+    return {
+      totalIncome: income,
+      totalExpense: expense,
+      balance: income - expense,
+      categoryBreakdown: Object.entries(byCategory).map(([label, value]) => ({
+        label,
+        value,
+      })),
+    }
+  }, [transactions])
+
+  const incomeExpenseData = [
+    { name: 'আয়', value: totalIncome, fill: 'var(--chart-1)' },
+    { name: 'ব্যয়', value: totalExpense, fill: 'var(--chart-4)' },
+  ].filter((d) => d.value > 0)
+
+  const ieChartConfig = {
+    আয়: { label: 'আয়', color: 'var(--chart-1)' },
+    ব্যয়: { label: 'ব্যয়', color: 'var(--chart-4)' },
+  } satisfies ChartConfig
+
+  const categoryChartConfig = Object.fromEntries(
+    categoryBreakdown.map((c, i) => [
+      c.label,
+      { label: c.label, color: palette[i % palette.length] },
+    ]),
+  ) satisfies ChartConfig
+
+  const hasAnyData = totalIncome > 0 || totalExpense > 0
 
   return (
     <div className="flex flex-col">
@@ -35,13 +77,13 @@ export function ReportScreen() {
           <StatCard
             icon={<TrendingUp className="size-4" />}
             label="মোট আয়"
-            value={formatTaka(summary.totalFund)}
+            value={formatTaka(totalIncome)}
             tone="income"
           />
           <StatCard
             icon={<TrendingDown className="size-4" />}
             label="মোট খরচ"
-            value={formatTaka(summary.totalExpense)}
+            value={formatTaka(totalExpense)}
             tone="expense"
           />
         </div>
@@ -50,118 +92,106 @@ export function ReportScreen() {
             <Wallet className="size-4.5" />
             বর্তমান ব্যালেন্স
           </span>
-          <span className="text-xl font-bold">{formatTaka(summary.balance)}</span>
+          <span className="text-xl font-bold">{formatTaka(balance)}</span>
         </div>
 
-        {/* Expense breakdown pie */}
-        <section className="mt-5 rounded-3xl border border-border bg-card p-5">
-          <h2 className="text-base font-bold text-foreground">
-            খরচের খাত বিশ্লেষণ
-          </h2>
-
-          {totalExpense === 0 ? (
-            <p className="mt-3 rounded-2xl border border-dashed border-border bg-muted/40 p-6 text-center text-sm text-muted-foreground">
-              এখনো কোনো খরচ যোগ করা হয়নি। খরচ যোগ হলে এখানে খাত অনুযায়ী বিশ্লেষণ দেখা যাবে।
-            </p>
-          ) : (
-            <>
-              <p className="text-xs text-muted-foreground">
-                মোট খরচ {formatTaka(totalExpense)} বিভিন্ন খাতে বণ্টন
-              </p>
-
+        {!hasAnyData ? (
+          <p className="mt-5 rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">
+            এখনো কোনো লেনদেন যোগ করা হয়নি। লেনদেন যোগ হলে এখানে গ্রাফ ও বিশ্লেষণ দেখা যাবে।
+          </p>
+        ) : (
+          <>
+            {/* Income vs Expense pie */}
+            <section className="mt-5 rounded-3xl border border-border bg-card p-5">
+              <h2 className="text-base font-bold text-foreground">আয় বনাম ব্যয়</h2>
               <ChartContainer
-                config={chartConfig}
-                className="mx-auto mt-3 aspect-square max-h-[220px]"
+                config={ieChartConfig}
+                className="mx-auto mt-3 aspect-square max-h-[200px]"
               >
                 <PieChart>
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent hideLabel />}
-                  />
+                  <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
                   <Pie
-                    data={expenseByCategory.map((s, i) => ({
-                      name: chartConfig[sliceKey[i] as keyof typeof chartConfig]
-                        .label,
-                      value: s.value,
-                      key: sliceKey[i],
-                    }))}
+                    data={incomeExpenseData}
                     dataKey="value"
                     nameKey="name"
-                    innerRadius={58}
-                    outerRadius={90}
+                    innerRadius={50}
+                    outerRadius={82}
                     strokeWidth={4}
                   >
-                    {expenseByCategory.map((_, i) => (
-                      <Cell
-                        key={sliceKey[i]}
-                        fill={`var(--color-${sliceKey[i]})`}
-                      />
+                    {incomeExpenseData.map((d) => (
+                      <Cell key={d.name} fill={d.fill} />
                     ))}
-                    <Label
-                      content={({ viewBox }) => {
-                        if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
-                          return (
-                            <text
-                              x={viewBox.cx}
-                              y={viewBox.cy}
-                              textAnchor="middle"
-                              dominantBaseline="middle"
-                            >
-                              <tspan
-                                x={viewBox.cx}
-                                y={(viewBox.cy ?? 0) - 6}
-                                className="fill-foreground text-lg font-bold"
-                              >
-                                {formatTaka(totalExpense)}
-                              </tspan>
-                              <tspan
-                                x={viewBox.cx}
-                                y={(viewBox.cy ?? 0) + 16}
-                                className="fill-muted-foreground text-[11px]"
-                              >
-                                মোট খরচ
-                              </tspan>
-                            </text>
-                          )
-                        }
-                        return null
-                      }}
-                    />
                   </Pie>
                 </PieChart>
               </ChartContainer>
+              <div className="mt-2 flex justify-center gap-6">
+                <LegendDot color="var(--chart-1)" label={`আয় ${formatTaka(totalIncome)}`} />
+                <LegendDot color="var(--chart-4)" label={`ব্যয় ${formatTaka(totalExpense)}`} />
+              </div>
+            </section>
 
-              {/* Legend with amounts */}
-              <ul className="mt-2 flex flex-col gap-2.5">
-                {expenseByCategory.map((slice, i) => {
-                  const pct = Math.round((slice.value / totalExpense) * 100)
-                  return (
-                    <li
-                      key={slice.label}
-                      className="flex items-center gap-3 text-sm"
+            {/* Expense breakdown pie */}
+            {categoryBreakdown.length > 0 && (
+              <section className="mt-4 rounded-3xl border border-border bg-card p-5">
+                <h2 className="text-base font-bold text-foreground">খরচের খাত বিশ্লেষণ</h2>
+                <p className="text-xs text-muted-foreground">
+                  মোট খরচ {formatTaka(totalExpense)} বিভিন্ন খাতে বণ্টন
+                </p>
+
+                <ChartContainer
+                  config={categoryChartConfig}
+                  className="mx-auto mt-3 aspect-square max-h-[220px]"
+                >
+                  <PieChart>
+                    <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                    <Pie
+                      data={categoryBreakdown}
+                      dataKey="value"
+                      nameKey="label"
+                      innerRadius={58}
+                      outerRadius={90}
+                      strokeWidth={4}
                     >
-                      <span
-                        className="size-3 shrink-0 rounded-full"
-                        style={{ backgroundColor: `var(--color-${sliceKey[i]})` }}
-                      />
-                      <span className="flex-1 font-medium text-foreground">
-                        {slice.label}
-                      </span>
-                      <span className="text-muted-foreground">
-                        {toBengaliDigits(pct)}%
-                      </span>
-                      <span className="w-20 text-right font-semibold text-foreground">
-                        {formatTaka(slice.value)}
-                      </span>
-                    </li>
-                  )
-                })}
-              </ul>
-            </>
-          )}
-        </section>
+                      {categoryBreakdown.map((c, i) => (
+                        <Cell key={c.label} fill={palette[i % palette.length]} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ChartContainer>
+
+                <ul className="mt-2 flex flex-col gap-2.5">
+                  {categoryBreakdown.map((slice, i) => {
+                    const pct = Math.round((slice.value / totalExpense) * 100)
+                    return (
+                      <li key={slice.label} className="flex items-center gap-3 text-sm">
+                        <span
+                          className="size-3 shrink-0 rounded-full"
+                          style={{ backgroundColor: palette[i % palette.length] }}
+                        />
+                        <span className="flex-1 font-medium text-foreground">{slice.label}</span>
+                        <span className="text-muted-foreground">{toBengaliDigits(pct)}%</span>
+                        <span className="w-20 text-right font-semibold text-foreground">
+                          {formatTaka(slice.value)}
+                        </span>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </section>
+            )}
+          </>
+        )}
       </div>
     </div>
+  )
+}
+
+function LegendDot({ color, label }: { color: string; label: string }) {
+  return (
+    <span className="flex items-center gap-1.5 text-[12px] font-medium text-foreground">
+      <span className="size-2.5 rounded-full" style={{ backgroundColor: color }} />
+      {label}
+    </span>
   )
 }
 
@@ -181,9 +211,7 @@ function StatCard({
       <span
         className={cn(
           'flex size-8 items-center justify-center rounded-full',
-          tone === 'income'
-            ? 'bg-secondary text-primary'
-            : 'bg-accent/15 text-accent',
+          tone === 'income' ? 'bg-secondary text-primary' : 'bg-accent/15 text-accent',
         )}
       >
         {icon}
