@@ -32,7 +32,6 @@ export function MobileShell() {
   const [loaded, setLoaded] = useState(false)
   const firedRef = useRef<Set<string>>(new Set())
 
-  // Load real saved data once, on the client only.
   useEffect(() => {
     try {
       const t = window.localStorage.getItem(LEDGER_KEY)
@@ -69,9 +68,6 @@ export function MobileShell() {
     window.localStorage.setItem(NOTIF_ENABLED_KEY, String(notifEnabled))
   }, [notifEnabled, loaded])
 
-  // Prayer-time reminder — only fires while this browser tab is open.
-  // Real background push (works even with the app/browser closed) needs a
-  // server + service worker, which isn't set up here.
   useEffect(() => {
     if (!loaded || !notifEnabled) return
     if (typeof window === 'undefined' || !('Notification' in window)) return
@@ -105,6 +101,10 @@ export function MobileShell() {
     setTransactions((prev) => [{ ...tx, id: uid() }, ...prev])
   }
 
+  function removeTransaction(id: string) {
+    setTransactions((prev) => prev.filter((t) => t.id !== id))
+  }
+
   function addMember(m: Omit<Member, 'id'>) {
     setMembers((prev) => [...prev, { ...m, id: uid() }])
   }
@@ -125,12 +125,14 @@ export function MobileShell() {
 
   return (
     <div className="flex h-dvh justify-center bg-muted/40">
-      {/* Phone frame */}
       <div className="relative flex h-dvh w-full max-w-md flex-col bg-background shadow-xl sm:my-4 sm:h-[calc(100dvh-2rem)] sm:rounded-[2.5rem] sm:border sm:border-border">
-        {/* Scrollable screen area */}
         <main className="flex-1 overflow-y-auto pb-6 sm:rounded-t-[2.5rem]">
           {screen === 'home' && (
-            <DashboardScreen onNavigate={setScreen} transactions={transactions} />
+            <DashboardScreen
+              onNavigate={setScreen}
+              transactions={transactions}
+              onDeleteTransaction={removeTransaction}
+            />
           )}
           {screen === 'members' && (
             <MembersScreen
@@ -155,7 +157,6 @@ export function MobileShell() {
           {screen === 'report' && <ReportScreen transactions={transactions} />}
         </main>
 
-        {/* Bottom navigation */}
         <div className="shrink-0 sm:overflow-hidden sm:rounded-b-[2.5rem]">
           <BottomNav active={screen} onNavigate={setScreen} />
         </div>
