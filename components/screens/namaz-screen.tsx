@@ -150,11 +150,14 @@ export function NamazScreen({
     window.localStorage.setItem(MEMBER_KEY, currentMember)
   }, [currentMember, loaded])
 
-  // Pick a default "who am I" once members list is available.
+  // Keep "who am I" in sync with the real member list — clears any stale
+  // cached name from before members existed, and auto-picks the first
+  // member when none is selected yet.
   useEffect(() => {
     if (!loaded) return
-    if (!currentMember && members.length > 0) {
-      setCurrentMember(members[0].name)
+    const stillExists = members.some((m) => m.name === currentMember)
+    if (!stillExists) {
+      setCurrentMember(members[0]?.name || '')
     }
   }, [loaded, members, currentMember])
 
@@ -191,7 +194,7 @@ export function NamazScreen({
   function upsertSubmission(task: IbadahTask, attendance?: PrayerAttendance) {
     if (!currentMember) return
     const existing = submissionsByTask[task.id]
-    if (existing && existing.status !== 'pending') return // locked once decided
+    if (existing && existing.status !== 'pending') return
 
     const points =
       attendance === 'jamaat'
@@ -263,7 +266,6 @@ export function NamazScreen({
 
   function submitPin() {
     if (!hasPin) {
-      // First-time setup — the person who does this becomes the one admin.
       if (pinInput.length < 4) {
         setPinError('কমপক্ষে ৪ ডিজিটের পিন দিন')
         return
@@ -345,7 +347,6 @@ export function NamazScreen({
       <ScreenHeader title="নামাজ ও ইবাদত" subtitle="আজকের আমল ও পুরস্কার" />
 
       <div className="space-y-5 p-4">
-        {/* Daily Hadith + Admin toggle */}
         <section className="overflow-hidden rounded-2xl bg-primary text-primary-foreground shadow-sm">
           <div className="flex items-center justify-between gap-3 px-4 pt-4">
             <span className="flex items-center gap-1.5 rounded-full bg-primary-foreground/12 px-3 py-1.5 text-[12px] font-medium">
@@ -378,7 +379,6 @@ export function NamazScreen({
           </figure>
         </section>
 
-        {/* PIN entry / first-time setup */}
         {showPinEntry && (
           <section className="rounded-2xl border border-accent/40 bg-accent/5 p-4">
             <div className="mb-2 flex items-center gap-2">
@@ -442,7 +442,6 @@ export function NamazScreen({
           </section>
         )}
 
-        {/* Who am I */}
         <section className="rounded-2xl border border-border bg-card p-3.5">
           <label className="mb-1.5 block text-[12px] font-medium text-muted-foreground">
             আপনি কে? (নাম নির্বাচন করুন)
@@ -466,7 +465,6 @@ export function NamazScreen({
           )}
         </section>
 
-        {/* Prayer time settings + notification toggle */}
         <section className="rounded-2xl border border-border bg-card p-4">
           <div className="mb-3 flex items-center gap-2">
             <Clock className="size-4.5 text-accent" />
@@ -527,7 +525,6 @@ export function NamazScreen({
           </p>
         </section>
 
-        {/* Admin: change PIN */}
         {isAdmin && (
           <section className="rounded-2xl border border-border bg-card p-3.5">
             {!showChangePin ? (
@@ -589,7 +586,6 @@ export function NamazScreen({
           </section>
         )}
 
-        {/* Admin: task management */}
         {isAdmin && (
           <section className="rounded-2xl border border-accent/40 bg-accent/5 p-4">
             <div className="mb-3 flex items-center gap-2">
@@ -672,7 +668,6 @@ export function NamazScreen({
           </section>
         )}
 
-        {/* Today's tasks */}
         <section>
           <h2 className="mb-3 text-[15px] font-bold text-foreground">
             আজকের ইবাদত ({currentMember || 'সদস্য নির্বাচন করুন'})
@@ -752,7 +747,6 @@ export function NamazScreen({
           </ul>
         </section>
 
-        {/* Admin: pending approvals */}
         {isAdmin && (
           <section>
             <h2 className="mb-3 text-[15px] font-bold text-foreground">
@@ -802,7 +796,6 @@ export function NamazScreen({
           </section>
         )}
 
-        {/* Leaderboard */}
         <section>
           <div className="mb-3 flex items-center gap-2">
             <Trophy className="size-4.5 text-accent" />
@@ -859,4 +852,4 @@ export function NamazScreen({
       </div>
     </div>
   )
-}              
+}
