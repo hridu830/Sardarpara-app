@@ -40,7 +40,6 @@ import { cn } from '@/lib/utils'
 
 const TASKS_KEY = 'sardarpara-ibadah-tasks'
 const SUBMISSIONS_KEY = 'sardarpara-ibadah-submissions'
-const ADMIN_SESSION_KEY = 'sardarpara-ibadah-admin-session'
 const MEMBER_KEY = 'sardarpara-ibadah-current-member'
 
 function uid() {
@@ -76,18 +75,21 @@ export function NamazScreen({
   onUpdatePrayerTimes,
   notifEnabled,
   onToggleNotif,
+  isAdmin,
+  onSetAdmin,
 }: {
   members: Member[]
   prayerTimes: PrayerSchedule
   onUpdatePrayerTimes: (p: PrayerSchedule) => void
   notifEnabled: boolean
   onToggleNotif: (v: boolean) => void
+  isAdmin: boolean
+  onSetAdmin: (v: boolean) => void
 }) {
   const [hadith, setHadith] = useState<Hadith>(salahHadiths[0])
 
   const [tasks, setTasks] = useState<IbadahTask[]>(defaultIbadahTasks)
   const [submissions, setSubmissions] = useState<IbadahSubmission[]>([])
-  const [isAdmin, setIsAdmin] = useState(false)
   const [hasPin, setHasPin] = useState(false)
   const [currentMember, setCurrentMember] = useState<string>('')
   const [today, setToday] = useState('')
@@ -118,8 +120,6 @@ export function NamazScreen({
       setTasks(t ? JSON.parse(t) : defaultIbadahTasks)
       const s = window.localStorage.getItem(SUBMISSIONS_KEY)
       setSubmissions(s ? JSON.parse(s) : [])
-      const a = window.localStorage.getItem(ADMIN_SESSION_KEY)
-      setIsAdmin(a === 'true')
       setHasPin(!!window.localStorage.getItem(ADMIN_PIN_KEY))
       const m = window.localStorage.getItem(MEMBER_KEY)
       setCurrentMember(m || '')
@@ -143,16 +143,9 @@ export function NamazScreen({
   }, [submissions, loaded])
   useEffect(() => {
     if (!loaded) return
-    window.localStorage.setItem(ADMIN_SESSION_KEY, String(isAdmin))
-  }, [isAdmin, loaded])
-  useEffect(() => {
-    if (!loaded) return
     window.localStorage.setItem(MEMBER_KEY, currentMember)
   }, [currentMember, loaded])
 
-  // Keep "who am I" in sync with the real member list — clears any stale
-  // cached name from before members existed, and auto-picks the first
-  // member when none is selected yet.
   useEffect(() => {
     if (!loaded) return
     const stillExists = members.some((m) => m.name === currentMember)
@@ -255,7 +248,7 @@ export function NamazScreen({
 
   function handleAdminButtonClick() {
     if (isAdmin) {
-      setIsAdmin(false)
+      onSetAdmin(false)
       return
     }
     setPinInput('')
@@ -276,14 +269,14 @@ export function NamazScreen({
       }
       window.localStorage.setItem(ADMIN_PIN_KEY, pinInput)
       setHasPin(true)
-      setIsAdmin(true)
+      onSetAdmin(true)
       setShowPinEntry(false)
       return
     }
 
     const stored = window.localStorage.getItem(ADMIN_PIN_KEY)
     if (pinInput === stored) {
-      setIsAdmin(true)
+      onSetAdmin(true)
       setShowPinEntry(false)
     } else {
       setPinError('পিনটি সঠিক নয়, আবার চেষ্টা করুন')
