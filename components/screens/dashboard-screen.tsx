@@ -26,10 +26,12 @@ export function DashboardScreen({
   onNavigate,
   transactions,
   onDeleteTransaction,
+  isAdmin,
 }: {
   onNavigate: (screen: Screen) => void
   transactions: Transaction[]
   onDeleteTransaction: (id: string) => void
+  isAdmin: boolean
 }) {
   const [hadith, setHadith] = useState<Hadith>(hadiths[0])
 
@@ -136,26 +138,34 @@ export function DashboardScreen({
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3 px-5">
-        <button
-          type="button"
-          onClick={() => onNavigate('transaction')}
-          className="flex flex-col items-start gap-2 rounded-2xl bg-primary p-4 text-left text-primary-foreground shadow-sm transition-transform active:scale-[0.98]"
-        >
-          <PlusCircle className="size-6" />
-          <span className="text-sm font-semibold leading-tight text-balance">
-            সংগ্রহ যোগ করুন
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={() => onNavigate('transaction')}
-          className="flex flex-col items-start gap-2 rounded-2xl bg-accent p-4 text-left text-accent-foreground shadow-sm transition-transform active:scale-[0.98]"
-        >
-          <MinusCircle className="size-6" />
-          <span className="text-sm font-semibold leading-tight text-balance">
-            খরচ যোগ করুন
-          </span>
-        </button>
+        {isAdmin ? (
+          <>
+            <button
+              type="button"
+              onClick={() => onNavigate('transaction')}
+              className="flex flex-col items-start gap-2 rounded-2xl bg-primary p-4 text-left text-primary-foreground shadow-sm transition-transform active:scale-[0.98]"
+            >
+              <PlusCircle className="size-6" />
+              <span className="text-sm font-semibold leading-tight text-balance">
+                সংগ্রহ যোগ করুন
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate('transaction')}
+              className="flex flex-col items-start gap-2 rounded-2xl bg-accent p-4 text-left text-accent-foreground shadow-sm transition-transform active:scale-[0.98]"
+            >
+              <MinusCircle className="size-6" />
+              <span className="text-sm font-semibold leading-tight text-balance">
+                খরচ যোগ করুন
+              </span>
+            </button>
+          </>
+        ) : (
+          <div className="col-span-2 rounded-2xl border border-dashed border-border bg-card p-3.5 text-center text-[12.5px] text-muted-foreground">
+            লেনদেন যোগ/মুছার জন্য এডমিন মোড প্রয়োজন — &quot;নামাজ&quot; ট্যাবে গিয়ে এডমিন মোডে ঢুকুন
+          </div>
+        )}
       </div>
 
       <section className="mt-6 px-5 pb-4">
@@ -174,7 +184,7 @@ export function DashboardScreen({
 
         {transactions.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">
-            এখনো কোনো লেনদেন যোগ করা হয়নি। উপরের বাটন থেকে প্রথম লেনদেন যোগ করুন।
+            এখনো কোনো লেনদেন যোগ করা হয়নি।
           </p>
         ) : (
           <ul className="flex flex-col gap-2.5">
@@ -209,14 +219,16 @@ export function DashboardScreen({
                   >
                     {formatSignedTaka(tx.amount)}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(tx.id, tx.title)}
-                    aria-label="লেনদেন মুছুন"
-                    className="flex size-8 shrink-0 items-center justify-center rounded-full text-destructive"
-                  >
-                    <Trash2 className="size-4" />
-                  </button>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(tx.id, tx.title)}
+                      aria-label="লেনদেন মুছুন"
+                      className="flex size-8 shrink-0 items-center justify-center rounded-full text-destructive"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  )}
                 </li>
               )
             })}
