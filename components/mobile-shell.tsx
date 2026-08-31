@@ -12,6 +12,7 @@ import {
   MEMBERS_KEY,
   PRAYER_TIMES_KEY,
   NOTIF_ENABLED_KEY,
+  ADMIN_SESSION_KEY,
   defaultPrayerTimes,
   prayerLabels,
   type Transaction,
@@ -29,6 +30,7 @@ export function MobileShell() {
   const [members, setMembers] = useState<Member[]>([])
   const [prayerTimes, setPrayerTimes] = useState<PrayerSchedule>(defaultPrayerTimes)
   const [notifEnabled, setNotifEnabled] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const firedRef = useRef<Set<string>>(new Set())
 
@@ -42,6 +44,8 @@ export function MobileShell() {
       setPrayerTimes(p ? JSON.parse(p) : defaultPrayerTimes)
       const n = window.localStorage.getItem(NOTIF_ENABLED_KEY)
       setNotifEnabled(n === 'true')
+      const a = window.localStorage.getItem(ADMIN_SESSION_KEY)
+      setIsAdmin(a === 'true')
     } catch (e) {
       console.error(e)
     }
@@ -67,6 +71,11 @@ export function MobileShell() {
     if (!loaded) return
     window.localStorage.setItem(NOTIF_ENABLED_KEY, String(notifEnabled))
   }, [notifEnabled, loaded])
+
+  useEffect(() => {
+    if (!loaded) return
+    window.localStorage.setItem(ADMIN_SESSION_KEY, String(isAdmin))
+  }, [isAdmin, loaded])
 
   useEffect(() => {
     if (!loaded || !notifEnabled) return
@@ -132,6 +141,7 @@ export function MobileShell() {
               onNavigate={setScreen}
               transactions={transactions}
               onDeleteTransaction={removeTransaction}
+              isAdmin={isAdmin}
             />
           )}
           {screen === 'members' && (
@@ -143,7 +153,12 @@ export function MobileShell() {
             />
           )}
           {screen === 'transaction' && (
-            <TransactionScreen onNavigate={setScreen} onSave={addTransaction} />
+            <TransactionScreen
+              onNavigate={setScreen}
+              onSave={addTransaction}
+              isAdmin={isAdmin}
+              onAdminUnlock={() => setIsAdmin(true)}
+            />
           )}
           {screen === 'namaz' && (
             <NamazScreen
@@ -152,6 +167,8 @@ export function MobileShell() {
               onUpdatePrayerTimes={setPrayerTimes}
               notifEnabled={notifEnabled}
               onToggleNotif={setNotifEnabled}
+              isAdmin={isAdmin}
+              onSetAdmin={setIsAdmin}
             />
           )}
           {screen === 'report' && <ReportScreen transactions={transactions} />}
