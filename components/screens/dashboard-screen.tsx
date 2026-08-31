@@ -9,6 +9,7 @@ import {
   MinusCircle,
   Quote,
   Wallet,
+  Trash2,
 } from 'lucide-react'
 import type { Screen } from '@/components/bottom-nav'
 import {
@@ -24,9 +25,11 @@ import { cn } from '@/lib/utils'
 export function DashboardScreen({
   onNavigate,
   transactions,
+  onDeleteTransaction,
 }: {
   onNavigate: (screen: Screen) => void
   transactions: Transaction[]
+  onDeleteTransaction: (id: string) => void
 }) {
   const [hadith, setHadith] = useState<Hadith>(hadiths[0])
 
@@ -44,7 +47,10 @@ export function DashboardScreen({
     return { totalFund: fund, totalExpense: expense, balance: fund - expense }
   }, [transactions])
 
-  const recent = transactions.slice(0, 6)
+  function handleDelete(id: string, title: string) {
+    if (!confirm(`"${title}" লেনদেনটি মুছে ফেলতে চান? এটি বাতিল করা যাবে না।`)) return
+    onDeleteTransaction(id)
+  }
 
   return (
     <div className="flex flex-col">
@@ -64,7 +70,6 @@ export function DashboardScreen({
           </span>
         </div>
 
-        {/* Prominent glassmorphic logo */}
         <div className="relative -mt-4 flex flex-col items-center text-center">
           <div className="relative">
             <div
@@ -97,7 +102,6 @@ export function DashboardScreen({
           />
         </div>
 
-        {/* Daily Hadith / wisdom snippet */}
         <figure className="mt-5 flex gap-3 rounded-2xl border border-primary-foreground/15 bg-primary-foreground/10 p-4">
           <Quote className="size-5 shrink-0 text-accent" aria-hidden="true" />
           <div className="min-w-0">
@@ -114,7 +118,6 @@ export function DashboardScreen({
         </figure>
       </header>
 
-      {/* Balance hero card overlapping the app bar */}
       <div className="-mt-12 px-5">
         <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
@@ -132,7 +135,6 @@ export function DashboardScreen({
         </div>
       </div>
 
-      {/* Primary actions */}
       <div className="mt-5 grid grid-cols-2 gap-3 px-5">
         <button
           type="button"
@@ -156,28 +158,27 @@ export function DashboardScreen({
         </button>
       </div>
 
-      {/* Recent transactions */}
-      <section className="mt-6 px-5">
+      <section className="mt-6 px-5 pb-4">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-bold text-foreground">সাম্প্রতিক লেনদেন</h2>
+          <h2 className="text-base font-bold text-foreground">সকল লেনদেন</h2>
           {transactions.length > 0 && (
             <button
               type="button"
               onClick={() => onNavigate('report')}
               className="text-[13px] font-medium text-accent"
             >
-              সব দেখুন
+              রিপোর্ট দেখুন
             </button>
           )}
         </div>
 
-        {recent.length === 0 ? (
+        {transactions.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">
             এখনো কোনো লেনদেন যোগ করা হয়নি। উপরের বাটন থেকে প্রথম লেনদেন যোগ করুন।
           </p>
         ) : (
           <ul className="flex flex-col gap-2.5">
-            {recent.map((tx) => {
+            {transactions.map((tx) => {
               const isIncome = tx.type === 'income'
               return (
                 <li
@@ -208,6 +209,14 @@ export function DashboardScreen({
                   >
                     {formatSignedTaka(tx.amount)}
                   </span>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(tx.id, tx.title)}
+                    aria-label="লেনদেন মুছুন"
+                    className="flex size-8 shrink-0 items-center justify-center rounded-full text-destructive"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
                 </li>
               )
             })}
