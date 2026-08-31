@@ -29,6 +29,7 @@ export function formatSignedTaka(amount: number): string {
 export const LEDGER_KEY = 'sardarpara-ledger'
 export const MEMBERS_KEY = 'sardarpara-members'
 export const ADMIN_PIN_KEY = 'sardarpara-admin-pin'
+export const ADMIN_SESSION_KEY = 'sardarpara-ibadah-admin-session'
 export const PRAYER_TIMES_KEY = 'sardarpara-prayer-times'
 export const NOTIF_ENABLED_KEY = 'sardarpara-notif-enabled'
 
