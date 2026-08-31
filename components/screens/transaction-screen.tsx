@@ -32,18 +32,23 @@ export function TransactionScreen({
   const [type, setType] = useState<'income' | 'expense'>('income')
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState<string>(categories[0])
+  const [customCategory, setCustomCategory] = useState('')
   const [description, setDescription] = useState('')
   const [saved, setSaved] = useState(false)
+
+  const isOther = category === 'অন্যান্য'
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const amt = Number(amount)
     if (!amt || amt <= 0) return
 
+    const finalCategory = isOther && customCategory.trim() ? customCategory.trim() : category
+
     const { iso, label } = todayISOAndLabel()
     onSave({
-      title: description.trim() || category,
-      category,
+      title: description.trim() || finalCategory,
+      category: finalCategory,
       amount: type === 'income' ? amt : -amt,
       type,
       date: iso,
@@ -55,6 +60,7 @@ export function TransactionScreen({
       setSaved(false)
       setAmount('')
       setDescription('')
+      setCustomCategory('')
       onNavigate('home')
     }, 700)
   }
@@ -64,7 +70,6 @@ export function TransactionScreen({
       <ScreenHeader title="নতুন লেনদেন" subtitle="আয় বা ব্যয় যোগ করুন" onBack={onNavigate} />
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5 px-5 py-5">
-        {/* Transaction type */}
         <fieldset>
           <legend className="mb-2 text-sm font-semibold text-foreground">
             লেনদেনের ধরন
@@ -101,7 +106,6 @@ export function TransactionScreen({
           </div>
         </fieldset>
 
-        {/* Amount */}
         <div>
           <label htmlFor="amount" className="mb-2 block text-sm font-semibold text-foreground">
             পরিমাণ *
@@ -125,7 +129,6 @@ export function TransactionScreen({
           </div>
         </div>
 
-        {/* Category */}
         <div>
           <span className="mb-2 block text-sm font-semibold text-foreground">খাত</span>
           <div className="flex flex-wrap gap-2">
@@ -146,9 +149,17 @@ export function TransactionScreen({
               </button>
             ))}
           </div>
+
+          {isOther && (
+            <input
+              value={customCategory}
+              onChange={(e) => setCustomCategory(e.target.value)}
+              placeholder="খাতের নাম লিখুন (যেমন: ঈদ উপহার, খেলাধুলা সামগ্রী)"
+              className="mt-2.5 w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+            />
+          )}
         </div>
 
-        {/* Description */}
         <div>
           <label htmlFor="description" className="mb-2 block text-sm font-semibold text-foreground">
             বিবরণ
@@ -163,7 +174,6 @@ export function TransactionScreen({
           />
         </div>
 
-        {/* Submit */}
         <button
           type="submit"
           className={cn(
